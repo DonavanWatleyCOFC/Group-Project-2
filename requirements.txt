@@ -1,0 +1,5 @@
+# Bootstrap constraints, NOT a verified environment lock.
+# Install CUDA-enabled torch/torchvision first using pytorch.org's Windows selector.
+ultralytics>=8.3,<9
+PyYAML>=6,<7
+# After Windows smoke testing: freeze the working environment and record CUDA install details.

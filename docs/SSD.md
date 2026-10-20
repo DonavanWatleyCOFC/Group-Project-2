@@ -91,7 +91,7 @@ The initial recommendation system will use deterministic filtering and scoring. 
 
 ### Supporting Tools
 
-- Jupyter Notebook or Google Colab for experiments and training.
+- Python scripts run from VS Code or PowerShell for experiments and training on the Windows RTX 3060 Ti.
 - GitHub for version control and collaboration.
 - Roboflow or CVAT for bounding-box annotation.
 - React Native or Flutter for the mobile application.
