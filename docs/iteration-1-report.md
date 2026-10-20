@@ -69,3 +69,14 @@ No images, licensing, labels, or model outputs have been reviewed by AI in this 
 Record material AI errors and corrections as they arise. Team understanding and approval
 of decisions have not been verified; each presenter must be able to explain the method,
 evidence, alternatives, and remaining uncertainty in their own words.
+
+## Candidate public dataset acquired — 2026-10-20
+
+Fridge Detection team-fork version 1 has been downloaded as YOLOv11 and extracted
+locally. See [source, license, and retrieval record](datasets/fridge-detection-v1.md).
+Observed file counts: 2,994 train, 103 validation, 51 test images, each with a label file.
+The export declares MIT and includes 30 classes. No object-count or annotation-quality
+claim is made. This updates the earlier no-import status: a candidate is now present,
+but it has not been selected, mapped into the ten-class project, or used for a model run.
+Data provenance, license-notice completeness, duplicates, split integrity, and real-scene
+usefulness require further audit. No training/evaluation results exist.

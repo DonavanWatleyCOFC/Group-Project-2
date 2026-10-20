@@ -1,0 +1,33 @@
+{
+  "download_date": "2026-10-20",
+  "original_source": "https://universe.roboflow.com/fridge-ydzni/fridge-detection-es0ja",
+  "original_version": "https://universe.roboflow.com/fridge-ydzni/fridge-detection-es0ja/dataset/1",
+  "fork_project": "https://app.roboflow.com/donavans-workspace/fridge-detection-es0ja-ck6ks",
+  "fork_version": "https://app.roboflow.com/donavans-workspace/fridge-detection-es0ja-ck6ks/1",
+  "version": 1,
+  "version_name": "fridge-detection-v1-baseline",
+  "format": "YOLOv11",
+  "declared_license": "MIT",
+  "archive_sha256": "cb7b908eb48475c07475bb53b6285fe8123bce93ff80630f01976e4518d1aae2",
+  "archive_bytes": 407297499,
+  "split_counts": {
+    "train": {
+      "images": 2994,
+      "labels": 2994
+    },
+    "valid": {
+      "images": 103,
+      "labels": 103
+    },
+    "test": {
+      "images": 51,
+      "labels": 51
+    }
+  },
+  "class_count": 30,
+  "preprocessing": "None added to fork version",
+  "augmentation": "None added to fork version",
+  "status": "Downloaded/extracted only; not approved for training; no annotation or leakage audit performed.",
+  "license_files_in_archive": [],
+  "archive_note": "Three identical data.yaml entries; extracted as one unchanged file."
+}
