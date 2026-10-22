@@ -2,18 +2,20 @@
 
 ## Current status
 
-Code scaffold written on the Mac. No real data collected/imported by this workflow,
-no ML dependencies installed for it, and no model downloaded, trained, or evaluated.
+Windows setup began on 2026-10-22. The code now targets the supplied 30-class Roboflow
+version rather than the obsolete ten-class scaffold. No real export has been imported
+yet, and no model has been downloaded, trained, or evaluated.
 The workflow uses Python scripts directly; no notebook or Jupyter dependency is required.
 Technical owner: Donavan. Teammates help collect approximately 120 refrigerator photos
 in total; annotation assistance and second-person review must be recorded as completed.
 
 ## Goal and method
 
-Fine-tune pretrained YOLO11n for apple, banana, bell pepper, broccoli, carrot, egg,
-milk, onion, tomato, and yogurt. Train later on Windows with an RTX 3060 Ti.
-Retain exported label order. Initial settings: 640 pixels, 50 epochs, patience 10,
-seed 42, automatic batch size, workers=0, standard training augmentation.
+Fine-tune pretrained YOLO11n for all 30 classes from the exact Roboflow export, retaining
+the exported label order and spelling (including `eggs`). Bell pepper, broccoli, and
+yogurt are not supported by this baseline. Train locally on Windows with an RTX 3060 Ti.
+Initial settings: 640 pixels, 50 epochs, patience 10, seed 42, batch size 8, workers=0,
+and standard training augmentation.
 These are starting choices, not experimentally established best settings.
 
 See [decision log](decision-log.md) for evidence, tradeoffs, AI assistance, and limitations.
@@ -31,17 +33,39 @@ Record before training:
 - Auto-orientation, 640×640 resize, no offline augmentation, and any actual deviations.
 - Entirely held-out refrigerator if available; otherwise disclose its absence.
 
-No dataset statistics or review completion are currently established.
+No dataset statistics, actual 30-name list, attribution files, or review completion are
+currently established because the raw version-1 export is absent. The expected image
+counts are 2,994 train / 103 validation / 51 test; these are claims to verify, not results.
 
-## Reproducibility record — pending Windows execution
+## Reproducibility record — Windows setup verified
 
-Record Python, package versions, NVIDIA driver, PyTorch CUDA build/install command,
-GPU, dataset version, training command, actual batch size, run folders, and checkpoint
-link. Preserve environment.json, request.json, requirements-lock.txt, and training args.
+Observed: Python 3.11.9; NVIDIA GeForce RTX 3060 Ti; NVIDIA driver 581.15 (reports CUDA
+13.0); torch 2.11.0+cu128; torchvision 0.26.0+cu128; Ultralytics 8.4.184; PyYAML 6.0.3;
+and PyTorch CUDA build 12.8. `torch.cuda.is_available()` is true and a small CUDA tensor
+calculation passed. Install command: `python -m pip install torch torchvision --index-url
+https://download.pytorch.org/whl/cu128`, then `python -m pip install -r requirements.txt`.
+
+Still record the dataset version, training command, actual batch size, run folders, and
+checkpoint link per run. Preserve environment.json, request.json, requirements-lock.txt,
+and training args.
 Back up selected weights and full run outputs to team-accessible Drive. Repository
 contains code/configuration and approved aggregate artifacts, not full datasets/weights.
 
-## Evaluation — not run
+## Smoke validation — completed, not a baseline result
+
+The exact version-1 export passed automated integrity checks: 2,994 training, 103
+validation, and 51 test images; paired labels; readable images; valid class IDs/boxes;
+no byte-identical image across splits; and complete manifest coverage. The export has no
+evidenced capture-session/refrigerator metadata, so its split independence and visual
+near-duplicate status remain pending human review.
+
+A one-epoch YOLO11n smoke run on the RTX 3060 Ti used batch 8, workers 0, training plus
+validation only. It reported validation precision 0.797, recall 0.800, mAP50 0.852, and
+mAP50-95 0.534. This is an operational smoke result, not a quality claim or full baseline;
+the held-out test split was not evaluated. External weights/artifacts are in
+`C:\Users\donav\Documents\GitHub\LearnFFNN\fridge-to-recipe-i1-smoke-20261022`.
+
+## Evaluation — held-out test not run
 
 After selection using validation data, evaluate the best checkpoint on held-out test
 images. Report precision, recall, mAP50, mAP50–95, per-class counts/results, confusion
@@ -54,7 +78,7 @@ Report weak results honestly. Do not tune using test results.
 
 ## Verification and limitations
 
-Seven synthetic validator tests pass. They use temporary byte fixtures as images and
+Eight synthetic validator tests pass. They use temporary byte fixtures as images and
 an isolated JSON-backed YAML parser; real image decoding and YAML integration are not
 verified. Python source syntax checks do not demonstrate model correctness. Windows
 CUDA setup, dependency compatibility, model calls, generated plots/metrics, inference,

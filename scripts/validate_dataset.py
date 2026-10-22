@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.bmp', '.webp', '.tif', '.tiff'}
 
 
-def validate(data_file, manifest=None):
+def validate(data_file, manifest=None, verify_images=True):
     import yaml
 
     data_file = Path(data_file).resolve()
@@ -23,13 +23,13 @@ def validate(data_file, manifest=None):
         if set(names) != set(range(len(names))):
             raise ValueError('Class IDs must be contiguous integers starting at zero.')
         names = [names[i] for i in range(len(names))]
-    expected = json.loads((ROOT / 'config/classes.json').read_text())
-    if not isinstance(names, list) or len(names) != len(expected):
-        raise ValueError('Expected the ten project classes. Sample datasets need a separate workflow.')
+    policy = json.loads((ROOT / 'config/classes.json').read_text())
+    if not isinstance(names, list) or len(names) != policy['required_class_count']:
+        raise ValueError('Expected exactly 30 exported project classes; do not subset or invent names.')
     if any(not isinstance(name, str) for name in names):
         raise ValueError('Class names must be strings.')
-    if Counter(n.casefold() for n in names) != Counter(expected):
-        raise ValueError(f'Unexpected class names: {names}. Do not silently rename labels.')
+    if len(set(names)) != len(names):
+        raise ValueError('Exported class names must be unique. Do not silently rename labels.')
     if config.get('nc', len(names)) != len(names):
         raise ValueError('nc disagrees with names.')
     base = Path(config.get('path') or '.')
@@ -64,6 +64,13 @@ def validate(data_file, manifest=None):
             if digest in hashes and hashes[digest] != split:
                 raise ValueError(f'Identical image content crosses splits: {key}')
             hashes[digest] = split
+            if verify_images:
+                try:
+                    from PIL import Image
+                    with Image.open(image) as decoded:
+                        decoded.verify()
+                except Exception as error:
+                    raise ValueError(f'Unreadable image: {image}') from error
             label = folder.parent / 'labels' / image.relative_to(folder).with_suffix('.txt')
             if not label.is_file():
                 raise ValueError(f'Missing label: {label}. Use an empty file for a reviewed background.')
@@ -127,8 +134,11 @@ def check_manifest(path, image_splits):
                 raise ValueError(f'Capture session crosses splits: {group}')
             sessions[group] = split
             refrigerators.setdefault(row['refrigerator_id'], set()).add(split)
+        elif row['source'] == 'public_unknown':
+            if row['refrigerator_id'] or row['session_id']:
+                raise ValueError(f'Public export must not invent refrigerator/session IDs: {image}')
         else:
-            raise ValueError(f'Unknown source for {image}; use custom or grocery_store.')
+            raise ValueError(f'Unknown source for {image}; use custom, grocery_store, or public_unknown.')
     if seen != set(image_splits):
         raise ValueError('Manifest must cover every exported image exactly once.')
     return refrigerators

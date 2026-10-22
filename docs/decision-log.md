@@ -100,6 +100,64 @@ Team acceptance of analytical explanations and model results remains pending.
 - [Ultralytics training settings](https://docs.ultralytics.com/modes/train/)
 - [Official PyTorch installation selector](https://pytorch.org/get-started/locally/)
 
+## 2026-10-22 — Version-1 Roboflow export is a 30-class baseline
+
+**Status:** Adopted from Donavan's instructions; code updated, real-export review pending.
+
+**Decision:** Use all 30 names in the exact class-ID order supplied by Roboflow version 1. The pipeline no longer encodes the historical ten-class list. The raw export's `data.yaml` is the authority; `prepare_dataset.py` writes a separate ignored local configuration and copies the list verbatim, without renaming, reordering, relabeling, or subsetting. The baseline does not support bell pepper, broccoli, or yogurt. `eggs` is retained when it is present in the export rather than normalized to the historical singular spelling.
+
+**Reason/evidence:** The requested export is `fridge-detection-v1-baseline`, YOLOv11, declared MIT, expected to contain 2,994 training, 103 validation, and 51 test images. At this entry, the raw export was not present locally, so its actual class names/counts, attribution files, and split contents remain unobserved.
+
+**Data policy:** Public-export items use `public_unknown`: no refrigerator/session IDs are invented and no independence claim is made. Strict session grouping remains mandatory for future `custom` images. The validator checks readable image files, image/label pairing, class IDs, boxes, class counts, byte-identical cross-split images, and manifest coverage; near duplicates and semantic split leakage still require human review.
+
+**AI assistance:** AI updated the scripts, tests, and documentation under explicit instructions. Human review of Roboflow terms, attribution, license applicability, annotations, and the final 30-name sequence is pending.
+
+## 2026-10-22 — Windows environment observation
+
+**Observed:** `nvidia-smi` reported NVIDIA GeForce RTX 3060 Ti, driver 581.15, and CUDA compatibility 13.0. Python 3.11.9 was installed per-user and an external virtual environment was created at `C:\Users\donav\Documents\GitHub\LearnFFNN\fridge-to-recipe-i1-venv`. No GPU clock, power, fan, or thermal setting was changed.
+
+**PyTorch plan:** The official PyTorch Windows selector supports Python 3.10–3.14 and directs CUDA-capable Windows users to pip CUDA builds. The selected command is `python -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128` (observed candidate versions: torch 2.11.0+cu128 and torchvision 0.26.0+cu128). The 2.75 GB wheel transfer was started as a background process after foreground transfers were interrupted by the execution time limit. Package installation, CUDA tensor verification, and the project dependency install are not yet claimed as complete.
+
+**Checks:** Eight synthetic validator tests passed under Python 3.11. They validate manifest coverage, missing labels, invalid boxes, duplicate leakage, session leakage, public split restriction, and public data with honestly unknown session metadata. Actual image decoding and real-export checks remain blocked by the missing raw export.
+
+## 2026-10-22 — Completed CUDA environment verification
+
+**Observed results:** The external environment contains Python 3.11.9, torch
+2.11.0+cu128, torchvision 0.26.0+cu128, Ultralytics 8.4.184, and PyYAML 6.0.3.
+`torch.cuda.is_available()` returned `true`, device 0 was `NVIDIA GeForce RTX 3060 Ti`,
+and `(arange(1, 7, device='cuda') ** 2).sum()` returned `91.0`. The project's
+`scripts/workflow.py check-gpu` command also passed. NVIDIA driver 581.15 reports CUDA
+compatibility 13.0; the installed PyTorch wheel is built for CUDA 12.8.
+
+**Actual installation command:** `python -m pip install torch torchvision --index-url
+https://download.pytorch.org/whl/cu128`, followed by `python -m pip install -r
+requirements.txt`. This uses PyTorch's official Windows pip CUDA channel. No full training,
+test evaluation, GPU overclock, power-limit, or thermal-limit change was performed.
+
+## 2026-10-22 — Exact version-1 export audit and smoke run
+
+**Observed dataset:** The supplied ZIP embedded the requested workspace/project/version,
+declared MIT, and exported these 30 ordered names: apple, banana, beef, blueberries,
+bread, butter, carrot, cheese, chicken, chicken_breast, chocolate, corn, eggs, flour,
+goat_cheese, green_beans, ground_beef, ham, heavy_cream, lime, milk, mushrooms, onion,
+potato, shrimp, spinach, strawberries, sugar, sweet_potato, tomato. The raw export and
+its `README.roboflow.txt` were retained under ignored `data/fridge-detection-v1`. The ZIP
+contains three identical `data.yaml` entries; extraction therefore skipped duplicate paths
+without overwriting the first identical metadata file.
+
+**Audit result:** Passed readable-image, image/label pairing, class-ID, box, class-count,
+exact cross-split hash, and manifest-coverage checks. Observed image counts matched the
+expected 2,994 train / 103 validation / 51 test. `public_unknown` is used because source
+capture sessions/refrigerators are not evidenced by this export; this result does not
+establish independent splits or rule out visual near duplicates.
+
+**Smoke result:** One epoch of pretrained YOLO11n training completed on CUDA with batch 8
+and workers 0, using only 2,994 train and 103 validation images. Validation after the
+epoch reported overall precision 0.797, recall 0.800, mAP50 0.852, and mAP50-95 0.534.
+These are smoke-run validation observations, not a selected baseline or held-out-test
+results. Weights and run artifacts are external at `fridge-to-recipe-i1-smoke-20261022`;
+held-out test evaluation was not run.
+
 
 ## 2026-10-19 — Python scripts replace the notebook interface
 

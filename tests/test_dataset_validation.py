@@ -17,7 +17,7 @@ class DatasetValidationTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        names = json.loads((ROOT / 'config/classes.json').read_text())
+        names = [f'exported_class_{index}' for index in range(30)]
         self.config = {'names': names}
         self.rows = []
         for split in ('train', 'val', 'test'):
@@ -45,42 +45,47 @@ class DatasetValidationTests(unittest.TestCase):
 
     def test_counts_and_background(self):
         (self.root / 'test/labels/item.txt').write_text('')
-        report = validate(self.data, self.manifest)
-        self.assertEqual(report['splits']['train']['instances']['apple'], 1)
+        report = validate(self.data, self.manifest, verify_images=False)
+        self.assertEqual(report['splits']['train']['instances']['exported_class_0'], 1)
         self.assertEqual(report['splits']['test']['background_images'], 1)
 
     def test_duplicate_across_splits_rejected(self):
         (self.root / 'test/images/item.jpg').write_bytes(b'train')
         with self.assertRaisesRegex(ValueError, 'Identical image'):
-            validate(self.data, self.manifest)
+            validate(self.data, self.manifest, verify_images=False)
 
     def test_session_leakage_rejected(self):
         self.rows[1][2] = 'train'
         self.save_manifest()
         with self.assertRaisesRegex(ValueError, 'session crosses'):
-            validate(self.data, self.manifest)
+            validate(self.data, self.manifest, verify_images=False)
 
     def test_public_test_data_rejected(self):
         self.rows[2][1] = 'grocery_store'
         self.save_manifest()
         with self.assertRaisesRegex(ValueError, 'training-only'):
-            validate(self.data, self.manifest)
+            validate(self.data, self.manifest, verify_images=False)
+
+    def test_public_unknown_does_not_require_invented_sessions(self):
+        self.rows[2][1:4] = ['public_unknown', '', '']
+        self.save_manifest()
+        self.assertTrue(validate(self.data, self.manifest, verify_images=False)['manifest_checked'])
 
     def test_invalid_box_rejected(self):
         (self.root / 'test/labels/item.txt').write_text('0 0.9 0.5 0.8 0.2')
         with self.assertRaisesRegex(ValueError, 'outside image'):
-            validate(self.data, self.manifest)
+            validate(self.data, self.manifest, verify_images=False)
 
     def test_missing_label_is_not_assumed_background(self):
         (self.root / 'test/labels/item.txt').unlink()
         with self.assertRaisesRegex(ValueError, 'Missing label'):
-            validate(self.data, self.manifest)
+            validate(self.data, self.manifest, verify_images=False)
 
     def test_manifest_must_cover_all_images(self):
         self.rows.pop()
         self.save_manifest()
         with self.assertRaisesRegex(ValueError, 'cover every'):
-            validate(self.data, self.manifest)
+            validate(self.data, self.manifest, verify_images=False)
 
 
 if __name__ == '__main__':
