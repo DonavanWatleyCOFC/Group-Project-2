@@ -221,3 +221,38 @@ accuracy. Complete the documented Windows smoke test when training hardware is r
 
 **AI assistance:** AI removed the wrapper and updated documentation at the user's
 request; no claim of student code review or model validation is made.
+
+## 2026-10-20 — Export and preserve Fridge Detection candidate
+
+**Status:** User authorized download, local extraction, and provenance documentation.
+Class selection and approval for training remain pending.
+
+**Decision:** Export team fork version 1 as YOLOv11 and preserve its 30 classes, splits,
+annotations, and metadata unchanged under ignored `data/fridge-detection-v1/`.
+Record source/fork URLs, declared MIT license, ZIP checksum, and file counts in
+`docs/datasets/fridge-detection-v1.json` and its companion Markdown record.
+
+**Reason/evidence:** The public dataset already contains detection annotations and is
+worth auditing as a candidate to reduce manual labeling. The export reports MIT and
+provides 2,994 train, 103 validation, and 51 test image/label pairs by file counts.
+Preserving raw data supports reproducible later transformations.
+
+**Alternative/tradeoff:** Collecting/annotating all training data ourselves gives more
+control but requires more work. Immediately filtering to seven classes would simplify
+the trial but prematurely settle a class decision that the user has not made.
+
+**Verification:** Browser confirmed version 1 and YOLOv11 ZIP export. Archive paths were
+checked before extraction and duplicate YAML entries were verified identical. Extracted
+split file counts match 3,148 images/labels. Git ignore checks cover the data and local
+agent file. No standalone license file exists in the ZIP; YAML license metadata and
+supplied README were preserved. Documentation/Git whitespace checks passed.
+
+**Limitations/next action:** No image/annotation quality, object counts, visual duplicate,
+or leakage audit yet. Underlying image rights/provenance are not established by the
+uploader's license declaration alone. Existing validator rejects these 30 classes/source;
+export YAML paths need a separate corrected configuration. No original scope/class
+mapping, training script, or dataset split was changed. Windows setup/testing remains pending.
+
+**AI assistance:** AI operated the authorized browser export, extracted files, counted
+entries, and wrote provenance records. These operations do not establish dataset quality
+or student review. No training, card entry, paid upgrade, commit, or push occurred.
