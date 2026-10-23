@@ -65,7 +65,30 @@ mAP50-95 0.534. This is an operational smoke result, not a quality claim or full
 the held-out test split was not evaluated. External weights/artifacts are in
 `C:\Users\donav\Documents\GitHub\LearnFFNN\fridge-to-recipe-i1-smoke-20261022`.
 
-## Evaluation — held-out test not run
+## Held-out test evaluation — completed once
+
+The selected `best.pt` checkpoint from the 50-epoch baseline was evaluated once on the
+51-image held-out Roboflow test split, after model selection. Overall results were
+precision **0.928**, recall **0.919**, mAP50 **0.943**, and mAP50-95 **0.663**. The
+checkpoint and complete evaluation artifacts, including per-class JSON, curves, confusion
+matrices, and label/prediction batches, are outside Git at
+`C:\Users\donav\Documents\GitHub\LearnFFNN\fridge-to-recipe-i1-test-20261022`.
+
+These metrics meet the stated project targets on the supplied split, but they are not
+evidence of generalization to independent refrigerators: the export offers no proven
+refrigerator/session grouping and visual near-duplicate review remains pending. The test
+set has no `goat_cheese` or `ham` instances, so it cannot measure those classes. The
+weakest measured mAP50-95 results were beef (0.327), lime (0.394), and chicken_breast
+(0.489); they should guide future data review and collection rather than be hidden.
+
+## Human-in-the-loop external verification — pending on Mac
+
+Donavan will retain personal/friend refrigerator photos on the Mac, outside all current
+training and tuning. Unlabelled photos can support qualitative box/class review. To
+produce comparable external metrics, they must be annotated in the same 30-class ID order
+and checked for overlap before one final external evaluation. Unsupported foods—bell
+pepper, broccoli, and yogurt—must be documented as outside this baseline rather than
+scored as detector errors.
 
 After selection using validation data, evaluate the best checkpoint on held-out test
 images. Report precision, recall, mAP50, mAP50–95, per-class counts/results, confusion

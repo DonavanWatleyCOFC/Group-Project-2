@@ -158,6 +158,39 @@ These are smoke-run validation observations, not a selected baseline or held-out
 results. Weights and run artifacts are external at `fridge-to-recipe-i1-smoke-20261022`;
 held-out test evaluation was not run.
 
+## 2026-10-22 — Candidate Refrigerator Food ZIP rejected as external data
+
+**Observed:** `Refrigerator Food.v1i.yolov11.zip` identifies itself as
+`donavans-workspace/refrigerator-food-clmy1/1`, CC BY 4.0, with 50 images and the same
+30-class YAML order. Every one of its 50 image SHA-256 hashes exactly matches an image in
+the 3,148-image baseline export. Its labels are syntactically valid and use all 30 IDs,
+despite its README's narrower annotation description.
+
+**Decision:** Do not extract, train on, validate with, or report this ZIP as external
+evidence. It would duplicate existing data and contaminate any claimed independent
+evaluation. A distinct dataset or held-out team refrigerator photos remain necessary for
+an external generalization check.
+
+## 2026-10-22 — Iteration 1 full baseline and held-out evaluation
+
+**Observed baseline:** Pretrained YOLO11n trained for 50 epochs on the validated 2,994
+training images with batch 8, image size 640, seed 42, patience 10, and workers 0 on the
+local RTX 3060 Ti. The selected `best.pt` is stored outside Git at
+`C:\Users\donav\Documents\GitHub\LearnFFNN\fridge-to-recipe-i1-baseline-20261022\artifacts\weights\best.pt`.
+
+**Observed held-out result:** One post-selection test evaluation over the 51-image supplied
+test split reported precision 0.9281, recall 0.9192, mAP50 0.9434, and mAP50-95 0.6625.
+Per-class metrics, curves, confusion matrices, and predicted/labelled batch images are
+stored outside Git at `fridge-to-recipe-i1-test-20261022`. No further tuning or training
+was performed after seeing this test result.
+
+**Limitations:** `goat_cheese` and `ham` have zero test instances, so the held-out result
+does not evaluate them. The public split has no evidenced refrigerator/session grouping;
+these scores apply to the supplied split and must not be presented as proof of performance
+on independent refrigerators. Beef, lime, and chicken_breast have the lowest measured
+mAP50-95 values (0.327, 0.394, and 0.489 respectively). Mac-held refrigerator photos
+remain the planned human-in-the-loop external check and were not accessed or uploaded.
+
 
 ## 2026-10-19 — Python scripts replace the notebook interface
 
