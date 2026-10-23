@@ -42,11 +42,17 @@ def main():
         command.add_argument('--device', default='cpu')
     predict.add_argument('--source', required=True, type=Path)
     predict.add_argument('--confidence', type=float, default=0.25)
+    predict.add_argument('--rerun', action='store_true', help='Open interactive prediction boxes in Rerun.')
     args = parser.parse_args()
     if args.command == 'train' and (args.epochs < 1 or args.batch == 0 or args.batch < -1):
         parser.error('Use positive epochs and batch=-1 or a positive batch size.')
     if args.command == 'predict' and not 0 < args.confidence <= 1:
         parser.error('Confidence must be in (0, 1].')
+    if args.command == 'predict' and args.rerun:
+        try:
+            import rerun
+        except ImportError:
+            parser.error('Install viewer dependencies: python -m pip install -r requirements-viewer.txt')
     for attr in ('weights', 'source'):
         if hasattr(args, attr) and not getattr(args, attr).exists():
             parser.error(f'{attr} does not exist: {getattr(args, attr)}')
@@ -107,6 +113,9 @@ def main():
                                        'xyxy': box.xyxy[0].cpu().tolist()})
             records.append({'image': str(result.path), 'detections': detections})
         write_json(output / 'predictions.json', records)
+        if args.rerun:
+            from rerun_viewer import show_predictions
+            show_predictions(output / 'predictions.json', recording=output / 'review.rrd')
 
 
 if __name__ == '__main__':

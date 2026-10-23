@@ -127,3 +127,27 @@ claim is made. This updates the earlier no-import status: a candidate is now pre
 but it has not been selected, mapped into the ten-class project, or used for a model run.
 Data provenance, license-notice completeness, duplicates, split integrity, and real-scene
 usefulness require further audit. No training/evaluation results exist.
+
+## Interactive prediction review — 2026-10-23
+
+An optional Rerun viewer now reads saved predictions and displays selectable detection
+boxes on the original photos, with class names, IDs, and confidence scores. A photo
+timeline separates images and clears stale detections. This supports qualitative human
+review; it does not calculate additional evaluation metrics or explain internal model
+reasoning. Ten synthetic tests and a real SDK synthetic recording check passed. Local
+SDK version: 0.33.1. GUI selection and human prediction review still need confirmation.
+
+### HEIC viewer correction
+
+The initial viewer showed only the JPEG while HEIC frames were black. It now decodes
+photos with EXIF orientation and logs PNG bytes. All six photos decoded successfully;
+dimensions match the inference loader. A corrected local recording is
+`runs/external-review-01/review-heic-fixed.rrd`. No predictions or model weights changed;
+visual confirmation remains pending.
+
+### Team review instructions
+
+See [Rerun viewer guide](rerun-guide.md) for Windows/Mac setup, opening the corrected
+recording, selecting detections, and recording qualitative errors. Reviewers need the
+separately shared .rrd and matching viewer, not weights or original photos. Windows
+viewer installation and teammate reproduction remain pending.

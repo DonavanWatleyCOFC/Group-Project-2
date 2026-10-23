@@ -224,3 +224,11 @@ __marimo__/
 *.pt
 *.onnx
 *.engine
+
+# Local Rerun recordings may contain personal refrigerator photos
+*.rrd
+
+# Separate environment for teammates who only view recordings
+.rerun-venv/
+
+.rerun-venv-backup*/

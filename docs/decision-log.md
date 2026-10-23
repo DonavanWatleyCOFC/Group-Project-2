@@ -256,3 +256,96 @@ mapping, training script, or dataset split was changed. Windows setup/testing re
 **AI assistance:** AI operated the authorized browser export, extracted files, counted
 entries, and wrote provenance records. These operations do not establish dataset quality
 or student review. No training, card entry, paid upgrade, commit, or push occurred.
+
+## 2026-10-23 — Selectable Rerun detection review
+
+**Decision:** Add an optional local Rerun viewer over saved prediction JSON, plus a
+`predict --rerun` switch. Show the original photo with one selectable box entity per
+detection; attach class name, class ID, and numeric confidence as selection metadata.
+Use a photo timeline and clear previous detections on every frame, including empty ones.
+
+**Reason/evidence:** Donavan requested clicking boxes to inspect classifications.
+Reusing saved predictions avoids retraining or repeated inference. Separate optional
+requirements keep the visualization package out of the training dependency set.
+Alternative: static annotated images are simpler but cannot expose selectable metadata.
+
+**Verification:** Ten synthetic tests passed, including box geometry/metadata and stale
+box clearing. Rerun SDK 0.33.1 installed in the local Mac virtual environment. A real SDK
+recording-only check using a generated image and an empty second frame passed under
+strict logging. No training or model modification occurred. API references:
+https://ref.rerun.io/docs/python/0.33.1/rerun/ and
+https://rerun.io/docs/howto/logging-and-ingestion/custom-data .
+
+**Limitations:** Automated logging tests do not establish GUI click behavior or model
+accuracy. Confidence is an uncalibrated model score, not a guarantee of correctness.
+Original image files must remain available for JSON replay. Recordings embed photos
+and are locally ignored. Unsupported image encodings may require conversion to PNG/JPEG.
+
+**AI assistance:** AI wrote implementation/tests/docs and checked SDK serialization.
+Human inspection of predictions and GUI selection behavior remains pending. No push.
+
+**Local replay observation:** Logging the six existing photo records to an ignored
+`runs/external-review-01/review.rrd` completed. GUI launch from the restricted execution
+environment failed to connect; the initial PATH lookup also found a mismatched global
+viewer (0.37.1). Updated launch to explicitly use the project's matching SDK viewer.
+Interactive rendering/click verification is still pending user launch in a normal terminal;
+unsupported HEIC rendering may require JPEG/PNG copies. The saved recording is not proof
+that every photo was visually rendered correctly.
+
+## 2026-10-23 — Fix black HEIC frames in Rerun
+
+**Decision/reason:** User reported only the JPEG rendered. The viewer previously sent
+original HEIC bytes, which the viewer did not render. Decode every source image with
+Pillow (pillow-heif for HEIC), apply EXIF orientation, and log PNG bytes. Source files,
+model weights, predictions, and box coordinates remain unchanged.
+
+**Alternative/tradeoff:** Manual JPEG copies would require filename/path management and
+could change coordinate orientation. In-memory PNG conversion keeps originals untouched
+but increases recording size and decoding time. Added optional pillow-heif dependency.
+
+**Verification:** All six actual source photos decoded to RGB PNG; dimensions matched
+the installed Ultralytics inference loader for every image. Generated a fresh recording
+at runs/external-review-01/review-heic-fixed.rrd using the existing predictions, without
+model inference or training. All ten automated tests passed; GUI rendering is pending
+user confirmation. Installed pillow-heif 1.8.1 in the Mac virtual environment.
+
+**AI assistance/limitations:** AI diagnosed the encoding mismatch and corrected the
+logging implementation. Model correctness and human annotation review remain separate;
+this is a visualization repair. No push or source-photo changes.
+
+## 2026-10-23 — Beginner team Rerun guide
+
+**Decision/reason:** Add docs/rerun-guide.md with separate Windows/PowerShell and Mac
+instructions, version-matched 0.33.1 installation, explicit executable paths, recording
+location/open commands, selection/timeline instructions, and troubleshooting. Link it
+from the README. Ignore a separate .rerun-venv so reviewers do not alter training setups.
+
+**Alternative/tradeoff:** Installing the full ML environment is unnecessary for opening
+an embedded .rrd. A viewer-only environment is smaller and avoids PATH version conflicts;
+teammates still need Python and the separately shared recording.
+
+**Verification:** Checked the corrected recording exists, the installed viewer reports
+0.33.1, and official Rerun docs confirm packaged viewer and file-open CLI. Git ignore
+and whitespace checks passed. Windows commands were reviewed, not executed on this Mac.
+
+**AI assistance/limitations:** AI drafted the guide; teammate installation, graphics
+compatibility, and human review remain unverified. No model run, push, or photo sharing.
+
+
+## 2026-10-23 — Clarify teammate environment setup
+
+**Decision/reason:** Expand the viewer guide to explain local virtual environments,
+explicit Python/pip/viewer checks, recording-path checks, optional activation, reopening,
+and recovery from copied/broken environments. Use executable paths as the default so
+activation/PATH differences do not prevent viewing. Ignore backup environment folders.
+
+**Alternative/tradeoff:** Sharing the training environment adds unnecessary dependencies;
+copying virtual environments between machines is unreliable. A separate local viewer
+setup needs a one-time installation but isolates reviewer packages.
+
+**Verification/limitations:** Documentation and whitespace checks performed; existing Mac
+viewer version was previously verified as 0.33.1. Windows setup and teammate walkthrough
+remain unexecuted. No dependencies installed or model operations run for this edit.
+
+**AI assistance:** AI wrote setup explanations and recovery steps; successful teammate
+installation is not claimed. No push.
