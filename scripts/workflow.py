@@ -37,6 +37,12 @@ def main():
         command.add_argument('--output', required=True, help='New run directory; never overwrites.')
     train.add_argument('--epochs', type=int, default=50)
     train.add_argument('--batch', type=int, default=-1)
+    train.add_argument('--hsv-h', type=float, default=0.015,
+                       help='Maximum hue shift; preserves food color while varying fridge lighting.')
+    train.add_argument('--hsv-s', type=float, default=0.35,
+                       help='Maximum saturation variation for color robustness.')
+    train.add_argument('--hsv-v', type=float, default=0.25,
+                       help='Maximum brightness/value variation for refrigerator lighting.')
     for command in (evaluate, predict):
         command.add_argument('--weights', required=True, type=Path)
         command.add_argument('--device', default='cpu')
@@ -46,6 +52,8 @@ def main():
     args = parser.parse_args()
     if args.command == 'train' and (args.epochs < 1 or args.batch == 0 or args.batch < -1):
         parser.error('Use positive epochs and batch=-1 or a positive batch size.')
+    if args.command == 'train' and not all(0 <= value <= 1 for value in (args.hsv_h, args.hsv_s, args.hsv_v)):
+        parser.error('HSV augmentation values must be in [0, 1].')
     if args.command == 'predict' and not 0 < args.confidence <= 1:
         parser.error('Confidence must be in (0, 1].')
     if args.command == 'predict' and args.rerun:
@@ -82,7 +90,8 @@ def main():
     if args.command == 'train':
         model = YOLO('yolo11n.pt')  # May download pretrained weights when explicitly run later.
         model.train(data=dataset['data'], epochs=args.epochs, imgsz=640, batch=args.batch,
-                    patience=10, seed=42, device=0, workers=0, save=True, plots=True, **common)
+                    patience=10, seed=42, device=0, workers=0, save=True, plots=True,
+                    hsv_h=args.hsv_h, hsv_s=args.hsv_s, hsv_v=args.hsv_v, **common)
         print(f'Run saved under {model.trainer.save_dir}. Back it up to shared Drive.')
     elif args.command == 'evaluate':
         model = YOLO(str(args.weights.resolve()))
