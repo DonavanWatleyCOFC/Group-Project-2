@@ -347,5 +347,23 @@ setup needs a one-time installation but isolates reviewer packages.
 viewer version was previously verified as 0.33.1. Windows setup and teammate walkthrough
 remain unexecuted. No dependencies installed or model operations run for this edit.
 
+## 2026-10-26 — Summarize workbook detection review
+
+Analyzed Book1.xlsx read-only; saved methodology, per-class review counts,
+provisional precision proxies, and limitations in prediction-review-2026-10-26.md.
+55 of 56 detections have issue labels: one good and 54 wrong. No complete missed
+object inventory or ground-truth boxes exist in the workbook, so recall, mAP,
+and a standard detection confusion matrix cannot be calculated from it.
+Compared existing prediction JSON: six image IDs versus seven in the workbook;
+counts suggest a possible label shift but no remapping was assumed. Alternative
+of inferring ground truth from ambiguous descriptions was rejected. AI extracted
+and tallied rows using bundled Python; independent visual review, new inference,
+and training were not run. Next action: confirm IDs and complete box annotations.
+
 **AI assistance:** AI wrote setup explanations and recovery steps; successful teammate
 installation is not claimed. No push.
+
+
+## 2026-10-26 — Training versus household photo comparison
+
+AI inspected five training samples and six new photos; read paired labels/checkpoint metadata and counted filename roots. Similar interiors/corruption in samples contrast with cluttered varied new scenes. Proposed domain-matched data and grouped splits before handcrafted features. See image-comparison-2026-10-26.md for evidence, alternatives, verification and limitations. No training/inference or dataset edits ran; sample prevalence and causal gains remain unmeasured.
