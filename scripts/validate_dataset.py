@@ -24,8 +24,12 @@ def validate(data_file, manifest=None, verify_images=True):
             raise ValueError('Class IDs must be contiguous integers starting at zero.')
         names = [names[i] for i in range(len(names))]
     policy = json.loads((ROOT / 'config/classes.json').read_text())
-    if not isinstance(names, list) or len(names) != policy['required_class_count']:
-        raise ValueError('Expected exactly 30 exported project classes; do not subset or invent names.')
+    baseline_names = policy['baseline_class_names']
+    allowed_appended = policy['allowed_appended_class_names']
+    if not isinstance(names, list) or names[:len(baseline_names)] != baseline_names:
+        raise ValueError('The original 30 class IDs and names must remain unchanged.')
+    if names[len(baseline_names):] != allowed_appended[:len(names) - len(baseline_names)]:
+        raise ValueError('Supplemental classes must be an ordered prefix of the approved appended classes.')
     if any(not isinstance(name, str) for name in names):
         raise ValueError('Class names must be strings.')
     if len(set(names)) != len(names):

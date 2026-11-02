@@ -6,6 +6,8 @@
 **Team members:** Adwoa A, Owen D, Donavan W, Carsyn W  
 **Date:** 06OCT26
 
+**Dataset section updated:** 01NOV26
+
 ## 1. Statement of Purpose
 
 The purpose of this project is to develop a mobile application that identifies food items in a photograph of a refrigerator and recommends recipes that can be prepared using those ingredients.
@@ -21,19 +23,117 @@ Users may also provide pantry items, dietary restrictions, food allergies, and p
 
 ## 2. Data to Be Used for Training
 
-### Grocery Store Dataset
+### Image Datasets Used in the Detection Experiments
 
-Source: [Grocery Store Dataset](https://github.com/marcusklasson/GroceryStoreDataset)
+The implemented detector uses bounding-box annotations from the following sources.
+Counts below are image files actually imported, not object counts. Exported
+augmentations are included in those counts and are not independent photographs.
 
-The Grocery Store Dataset contains 5,125 natural smartphone images of grocery products from 81 fine-grained classes organized into 42 broader classes. It includes fruits, vegetables, and carton items such as milk, juice, and yogurt.
+| Dataset and version | Declared license | Imported training images | Imported validation images | Contribution |
+| --- | --- | ---: | ---: | --- |
+| [Fridge Detection v1](https://universe.roboflow.com/fridge-ydzni/fridge-detection-es0ja/dataset/1), exported through the team fork | MIT | 2,994 | 103 | Original 30 classes; also supplies 51 held-out internal test images. |
+| [AICook v1, original images](https://universe.roboflow.com/karel-cornelis-q2qqg/aicook-lcv4d/dataset/1) | MIT | 362 | 103 | Supplemental examples for the same 30 classes; its 51 test images are excluded. |
+| [5K Groceries Object Detection, train-val branch](https://github.com/aleksandar-aleksandrov/groceries-object-detection-dataset/tree/train-val) | No standalone license verified in the downloaded checkout; confirm reuse terms before redistribution | 3,067 | 0 | Selected 18 categories; 14 new classes and four existing classes. |
+| [Types of Food v3](https://universe.roboflow.com/test-ol1sl/types-of-food/dataset/3) | Public Domain, as declared by the source | 104 | 0 | Six new condiment classes plus existing milk, soda, and water examples. |
+| [Vegetables v1](https://universe.roboflow.com/vegetables/vegetables-el4g6/dataset/1) | CC BY 4.0 | 6,886 | 575 | Thirteen new classes plus existing carrot, corn, onion, potato, and tomato examples. |
+| [Fridge Objects v12](https://universe.roboflow.com/fooddetection-essdj/fridge-objects/dataset/12) | CC BY 4.0 | 812 | 45 | Dairy-positive images; adds yogurt and supplements milk, cheese, and butter. |
 
-Because the dataset primarily supports classification of individual grocery items, it will be supplemented with custom images containing multiple items in realistic refrigerators.
+Preserve the source attribution and export notices. License declarations do not
+independently establish ownership of every source image. For the two CC BY sources,
+retain attribution to **Vegetables (2022)** and **fooddetection (2023)** respectively,
+link the source and license, and record annotation conversions and label changes.
 
-### Custom Refrigerator Image Dataset
+#### Class IDs and Incoming Label Mappings
 
-The team will collect refrigerator photographs for approximately 10–20 common food classes. Candidate classes include apples, bananas, bell peppers, broccoli, carrots, cheese, eggs, lettuce, milk, onions, oranges, tomatoes, and yogurt.
+The original 30 labels keep their original order and zero-based IDs:
 
-Each supported item will be labeled with a class and bounding box. Images should represent different refrigerators, camera angles, distances, lighting conditions, arrangements, and partial obstructions. A reasonable initial target is 50–100 labeled examples per class, subject to the available schedule.
+```text
+0 apple, 1 banana, 2 beef, 3 blueberries, 4 bread, 5 butter,
+6 carrot, 7 cheese, 8 chicken, 9 chicken_breast, 10 chocolate,
+11 corn, 12 eggs, 13 flour, 14 goat_cheese, 15 green_beans,
+16 ground_beef, 17 ham, 18 heavy_cream, 19 lime, 20 milk,
+21 mushrooms, 22 onion, 23 potato, 24 shrimp, 25 spinach,
+26 strawberries, 27 sugar, 28 sweet_potato, 29 tomato
+```
+
+Incoming annotations are remapped by label name rather than by concatenating YAML
+files or assuming source numeric IDs match the project IDs. New labels are appended:
+
+| Source | Appended IDs and labels | Existing-label mapping and exclusions |
+| --- | --- | --- |
+| 5K Groceries | 30 beans, 31 fish, 32 honey, 33 jam, 34 juice, 35 nuts, 36 oil, 37 pasta, 38 rice, 39 soda, 40 spices, 41 tomato_sauce, 42 vinegar, 43 water | corn → 11, flour → 13, milk → 20, sugar → 27. Import only the 18 selected categories. Keep packaged/dry beans distinct from green_beans. |
+| Types of Food | 44 ketchup, 45 lemon_juice, 46 mayonnaise, 47 mustard, 48 relish, 49 salsa | Coke and Root-Beer → soda; Milk-Jug → milk; Water-Bottle → water. Exclude whole images containing Yogurt at this stage. Ketchup remains distinct from tomato_sauce. |
+| Vegetables | 50 broccoli, 51 cucumber, 52 cabbage, 53 avocado, 54 eggplant, 55 garlic, 56 pumpkin, 57 celery, 58 peas, 59 bell_pepper, 60 beetroot, 61 cauliflower, 62 hot_pepper | bell pepper → bell_pepper; beet → beetroot; cayliflower → cauliflower; hot pepper → hot_pepper. Existing carrot, corn, onion, potato, and tomato retain their IDs. |
+| Fridge Objects dairy subset | 63 yogurt | milk, cheese, butter, avocado, and eggs retain existing IDs; tomatoes → tomato. Only dairy-positive images with fully supported annotations are imported. |
+
+Vegetable images containing any deferred source label are excluded as whole images:
+`beans`, `brus capusta`, `fasol`, `rediska`, `redka`, `salad`, `squash-patisson`,
+and `vegetable marrow`. This avoids merging ambiguous categories or leaving their
+objects unlabeled. The dairy subset similarly excludes images containing `bacon`,
+`lemon`, or ambiguous `pepper`. It preserves supported non-dairy annotations in
+admitted images. One exact duplicate was skipped during the dairy import.
+
+5K annotations are converted from Pascal VOC boxes to normalized YOLO boxes;
+zero-area source boxes are omitted. Types of Food polygon annotations are converted
+to enclosing detection boxes. The importers also support polygon-to-box conversion
+when required by subsequent exports.
+
+#### Dataset Progression and Evaluation Boundaries
+
+| Combined dataset directory under data/ | Classes | Train | Validation | Internal test |
+| --- | ---: | ---: | ---: | ---: |
+| fridge-detection-v1 | 30 | 2,994 | 103 | 51 |
+| combined-aicook-v1 | 30 | 3,356 | 206 | 51 |
+| combined-aicook-5k-groceries | 44 | 6,423 | 206 | 51 |
+| combined-aicook-5k-condiments | 50 | 6,527 | 206 | 51 |
+| combined-condiments-vegetables | 63 | 13,413 | 781 | 51 |
+| combined-condiments-vegetables-dairy | 64 | 14,225 | 826 | 51 |
+
+The selected 5K source training and validation images were both imported into
+project training. Selected Types of Food training, validation, and test images
+were also imported into project training. Those source partitions can therefore
+never be used as held-out tests for these models. The 14 new grocery classes and
+six condiment classes have no dedicated validation or internal test examples in
+these combined datasets; their generalization is not measured by the original
+fridge validation/test scores.
+
+Vegetables and dairy preserve their source validation images as validation and
+exclude their source test partitions. All combined datasets retain the same 51
+baseline internal test images. These public images do not provide external
+unseen-fridge verification, and the test split does not cover all 64 classes.
+
+Import reports, data.yaml, manifest.csv, and validation-summary.json are stored
+with the generated datasets. Validation checks image readability, class-ID order,
+box bounds, manifest coverage, and exact duplicate image content across splits.
+Visual near duplicates, related augmented images, annotation completeness, and
+unknown capture sessions still require review; session independence is not proven
+for the public exports. Raw datasets, checkpoints, and run outputs remain local
+and are excluded from Git by the project's ignore rules.
+
+### Custom Refrigerator Images and External Evaluation
+
+Personal photos in `data/new_photos`, including `fridge_15` through `fridge_20`,
+have been used for qualitative prediction review and have not been imported into
+training. They currently lack complete ground-truth boxes, so their predictions
+cannot establish precision, recall, or mAP. Because these photos have informed
+development decisions, reserve additional, independently labeled refrigerator
+photos for final external evaluation.
+
+Collect varied refrigerators, camera angles, lighting, packaging, arrangements,
+and partial obstructions. Label every supported visible item, keep each known
+refrigerator/session in a single split, and preserve a held-out external test set.
+The proposed [CollectData Inside the Fridge dataset](https://huggingface.co/datasets/CollectDataIO/inside-the-fridge)
+has not been imported into training; sampled frames require labeling before use
+as an external evaluation source.
+
+### Previously Considered or Unused Image Sources
+
+The [Grocery Store Dataset](https://github.com/marcusklasson/GroceryStoreDataset)
+originally proposed here is a classification source and has not been merged into
+the YOLO detection datasets. It is distinct from the 5K Groceries bounding-box
+dataset actually used. The Kaggle fruit/vegetable classification source and the
+additional meat and beverage datasets discussed with the team have not been
+imported. Searching or recommending a dataset does not make it a training source.
 
 ### RecipeNLG
 
@@ -58,6 +158,8 @@ Image preprocessing may include:
 - Separating data into training, validation, and held-out testing sets.
 - Keeping images from one refrigerator session in one split to avoid leakage.
 - Applying suitable augmentation, such as cropping and brightness changes.
+- Retaining color and using the implemented training settings `hsv_h=0.015`,
+  `hsv_s=0.35`, and `hsv_v=0.25`; some public exports already contain augmented copies.
 - Checking class balance and collecting additional examples for weak classes.
 
 Recipe preprocessing may include:
@@ -99,7 +201,7 @@ The initial recommendation system will use deterministic filtering and scoring. 
 
 ## 4. Process and Workflow Overview
 
-1. Select approximately 10–20 common refrigerator ingredient classes.
+1. Select the supported ingredient labels for the experiment; preserve the original 30 IDs and append approved classes, currently through the 64-class dairy dataset.
 2. Collect public and custom images, label visible items, and clean the data.
 3. Select a manageable recipe subset and normalize its ingredients.
 4. Split image data into training, validation, and held-out test sets.
@@ -180,6 +282,15 @@ The MVP will be tested using refrigerator images excluded from training. Team me
 
 ## 8. References
 
+- [Fridge Detection v1, original source](https://universe.roboflow.com/fridge-ydzni/fridge-detection-es0ja/dataset/1)
+- [Fridge Detection v1, team export](https://app.roboflow.com/donavans-workspace/fridge-detection-es0ja-ck6ks/1)
+- [AICook v1, original images](https://universe.roboflow.com/karel-cornelis-q2qqg/aicook-lcv4d/dataset/1)
+- [5K Groceries Object Detection, train-val branch](https://github.com/aleksandar-aleksandrov/groceries-object-detection-dataset/tree/train-val)
+- [Types of Food v3](https://universe.roboflow.com/test-ol1sl/types-of-food/dataset/3)
+- [Vegetables v1](https://universe.roboflow.com/vegetables/vegetables-el4g6/dataset/1)
+- [Fridge Objects v12](https://universe.roboflow.com/fooddetection-essdj/fridge-objects/dataset/12)
+- [CC BY 4.0 license](https://creativecommons.org/licenses/by/4.0/)
+- [CollectData Inside the Fridge, proposed external evaluation source](https://huggingface.co/datasets/CollectDataIO/inside-the-fridge)
 - [Grocery Store Dataset](https://github.com/marcusklasson/GroceryStoreDataset)
 - [Grocery Store Dataset paper](https://arxiv.org/abs/1901.00711)
 - [RecipeNLG project](https://recipenlg.cs.put.poznan.pl/)
