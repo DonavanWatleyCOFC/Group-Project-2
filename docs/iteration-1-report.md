@@ -151,3 +151,8 @@ See [Rerun viewer guide](rerun-guide.md) for Windows/Mac setup, opening the corr
 recording, selecting detections, and recording qualitative errors. Reviewers need the
 separately shared .rrd and matching viewer, not weights or original photos. Windows
 viewer installation and teammate reproduction remain pending.
+
+
+## 2026-10-26 — Training versus household photo comparison
+
+AI inspected five training samples and six new photos; read paired labels/checkpoint metadata and counted filename roots. Similar interiors/corruption in samples contrast with cluttered varied new scenes. Proposed domain-matched data and grouped splits before handcrafted features. See image-comparison-2026-10-26.md for evidence, alternatives, verification and limitations. No training/inference or dataset edits ran; sample prevalence and causal gains remain unmeasured.
