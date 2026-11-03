@@ -1,4 +1,11 @@
 
+## YOLO with optional OCR
+
+The main prediction command supports `--ocr` for local PaddleOCR package-label
+recognition and `--rerun` for a side-by-side comparison. YOLO-only inference remains
+available without `--ocr`. See [OCR setup, commands and output format](docs/ocr-guide.md).
+OCR uses a separate optional environment; it does not change the training packages.
+
 ## Downloaded public candidate
 
 Fridge Detection fork version 1 is available locally under ignored

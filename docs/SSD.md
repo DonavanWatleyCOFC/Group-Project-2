@@ -8,6 +8,8 @@
 
 **Dataset section updated:** 01NOV26
 
+**OCR design and approval section updated:** 03NOV26
+
 ## 1. Statement of Purpose
 
 The purpose of this project is to develop a mobile application that identifies food items in a photograph of a refrigerator and recommends recipes that can be prepared using those ingredients.
@@ -183,6 +185,7 @@ Recipe preprocessing may include:
 
 - **PyTorch:** deep-learning framework for model training and fine-tuning.
 - **Ultralytics YOLO:** object detection using transfer learning.
+- **PaddleOCR:** recognition of visible food-package text to support ingredient identification alongside YOLO.
 - **OpenCV and Pillow:** image processing and visualization.
 - **pandas and NumPy:** recipe and numeric data processing.
 - **scikit-learn:** data splitting, evaluation metrics, and recommendation baselines.
@@ -190,6 +193,43 @@ Recipe preprocessing may include:
 - **Matplotlib or Seaborn:** training and evaluation charts.
 
 The initial recommendation system will use deterministic filtering and scoring. It will consider ingredient coverage, missing-item count, dietary compatibility, declared allergens, and cuisine preference. More advanced similarity methods may be evaluated later if simple matching is insufficient.
+
+### Optical Character Recognition (OCR)
+
+The system uses PaddleOCR alongside the YOLO object-detection model to read visible
+food-package labels. YOLO identifies items from their visual appearance, while OCR
+provides supporting text evidence, such as "milk," "butter," or "kidney beans."
+
+Recognized text is normalized and matched to supported ingredient names. Nearby,
+aligned text lines may be combined when a product name spans multiple lines.
+Text confidence and location are used to associate label information with detected
+objects or suggest ingredients YOLO missed. OCR scans the image independently of
+YOLO's boxes so labels on visually undetected products can still be considered.
+
+OCR results remain subject to user confirmation. Small, obscured, curved, or poorly
+lit labels may be unreadable or misinterpreted. OCR confidence represents confidence
+in the recognized text, not certainty about the food's identity. Text-region boxes
+are distinguished from whole-object detection boxes. Ingredient-list text and
+ambiguous matches should not automatically establish a product's identity.
+
+The combined approach will be evaluated against YOLO alone using the same held-out
+images to measure recognition quality and the number of user corrections required.
+The current prototype runs OCR locally in a separate Python environment; this
+integration does not require retraining the YOLO checkpoint. The implementation and
+comparison artifacts originated in the separate yoloPlus project folder. The OCR
+integration is now available in Group-Project-2 through the `predict --ocr` command
+in `scripts/workflow.py`, with `--rerun` providing a side-by-side comparison. YOLO-only inference
+remains available, and an isolated OCR interpreter can be selected using
+`--ocr-python`. Setup and output details are documented in `docs/ocr-guide.md`.
+
+### Professor Approval for OCR Integration
+
+The professor approved using OCR alongside the YOLO model for this project, as
+reported by team member Donavan W. and recorded in this document on November 3,
+2026. This approval covers adding OCR as supporting evidence for ingredient
+identification. It does not establish the combined system's accuracy; evaluation
+and user confirmation remain part of the design. The approval date and professor's
+name are not specified in this record.
 
 ### Supporting Tools
 
@@ -282,6 +322,8 @@ The MVP will be tested using refrigerator images excluded from training. Team me
 
 ## 8. References
 
+- [PaddleOCR repository](https://github.com/PaddlePaddle/PaddleOCR)
+- [PaddleOCR general OCR pipeline documentation](https://www.paddleocr.ai/main/en/version3.x/pipeline_usage/OCR.html)
 - [Fridge Detection v1, original source](https://universe.roboflow.com/fridge-ydzni/fridge-detection-es0ja/dataset/1)
 - [Fridge Detection v1, team export](https://app.roboflow.com/donavans-workspace/fridge-detection-es0ja-ck6ks/1)
 - [AICook v1, original images](https://universe.roboflow.com/karel-cornelis-q2qqg/aicook-lcv4d/dataset/1)

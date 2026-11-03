@@ -17,7 +17,7 @@ class DatasetValidationTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        names = [f'exported_class_{index}' for index in range(30)]
+        names = json.loads((ROOT / 'config/classes.json').read_text())['baseline_class_names']
         self.config = {'names': names}
         self.rows = []
         for split in ('train', 'val', 'test'):
@@ -46,7 +46,7 @@ class DatasetValidationTests(unittest.TestCase):
     def test_counts_and_background(self):
         (self.root / 'test/labels/item.txt').write_text('')
         report = validate(self.data, self.manifest, verify_images=False)
-        self.assertEqual(report['splits']['train']['instances']['exported_class_0'], 1)
+        self.assertEqual(report['splits']['train']['instances'][self.config['names'][0]], 1)
         self.assertEqual(report['splits']['test']['background_images'], 1)
 
     def test_duplicate_across_splits_rejected(self):

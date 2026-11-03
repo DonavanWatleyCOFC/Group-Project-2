@@ -1,0 +1,4 @@
+# Optional local OCR runtime. Keep separate from the GPU training environment.
+paddlepaddle==3.2.2
+paddleocr==3.3.2
+pillow-heif>=1,<2
