@@ -28,7 +28,14 @@ def validate(data_file, manifest=None, verify_images=True):
     allowed_appended = policy['allowed_appended_class_names']
     if not isinstance(names, list) or names[:len(baseline_names)] != baseline_names:
         raise ValueError('The original 30 class IDs and names must remain unchanged.')
-    if names[len(baseline_names):] != allowed_appended[:len(names) - len(baseline_names)]:
+    schema = config.get('class_schema', 'legacy')
+    if schema == 'food63-no-spices-v1':
+        expected = baseline_names + [name for name in allowed_appended if name != 'spices']
+        if names != expected:
+            raise ValueError('food63-no-spices-v1 requires its exact approved 63-class order.')
+    elif schema != 'legacy':
+        raise ValueError(f'Unknown class schema: {schema}')
+    elif names[len(baseline_names):] != allowed_appended[:len(names) - len(baseline_names)]:
         raise ValueError('Supplemental classes must be an ordered prefix of the approved appended classes.')
     if any(not isinstance(name, str) for name in names):
         raise ValueError('Class names must be strings.')
