@@ -17,7 +17,11 @@ def main():
     args=parser.parse_args();root=Path(__file__).resolve().parents[1]
     cfg=yaml.safe_load(args.config.read_text());data=(root/cfg['data']).resolve()
     report=validate(data,data.parent/'manifest.csv',verify_images=args.run)
-    assert len(report['names'])==63 and 'spices' not in report['names']
+    expected_classes=cfg.get('expected_classes',63)
+    expected_schema=cfg.get('class_schema','food63-no-spices-v1')
+    actual_schema=yaml.safe_load(data.read_text()).get('class_schema')
+    assert actual_schema==expected_schema,'Training config/data class schemas disagree'
+    assert len(report['names'])==expected_classes and 'spices' not in report['names']
     for split in ('train','val'): assert all(report['splits'][split]['instances'].values())
     import torch
     assert torch.cuda.is_available(),'CUDA unavailable; training not started'

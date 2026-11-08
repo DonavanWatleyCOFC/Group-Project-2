@@ -26,10 +26,21 @@ def validate(data_file, manifest=None, verify_images=True):
     policy = json.loads((ROOT / 'config/classes.json').read_text())
     baseline_names = policy['baseline_class_names']
     allowed_appended = policy['allowed_appended_class_names']
-    if not isinstance(names, list) or names[:len(baseline_names)] != baseline_names:
-        raise ValueError('The original 30 class IDs and names must remain unchanged.')
     schema = config.get('class_schema', 'legacy')
-    if schema == 'food63-no-spices-v1':
+    reduced_schemas = {
+        'food61-no-spices-sugar-flour-v1': {'spices', 'sugar', 'flour'},
+        'food60-no-spices-sugar-flour-water-v1': {'spices', 'sugar', 'flour', 'water'},
+    }
+    if schema in reduced_schemas:
+        expected = [name for name in baseline_names + allowed_appended
+                    if name not in reduced_schemas[schema]]
+        if names != expected:
+            raise ValueError(f'{schema} requires its exact {len(expected)}-class order.')
+    elif not isinstance(names, list) or names[:len(baseline_names)] != baseline_names:
+        raise ValueError('The original 30 class IDs and names must remain unchanged.')
+    if schema in reduced_schemas:
+        pass  # Explicit schemas intentionally remove classes and remap the remaining IDs.
+    elif schema == 'food63-no-spices-v1':
         expected = baseline_names + [name for name in allowed_appended if name != 'spices']
         if names != expected:
             raise ValueError('food63-no-spices-v1 requires its exact approved 63-class order.')
