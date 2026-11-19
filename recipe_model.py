@@ -3,25 +3,16 @@ import json
 
 file_path = "/Users/adwoaaddai/Desktop/CSCI 270/Python/Group-Project-2/recipe_subset.csv"
 
-df_preview = pd.read_csv(file_path, nrows=5)
-
-print("Columns in dataset")
-print(df_preview.columns.tolist()) #check the columns of the dataset
-
-
 df = pd.read_csv(file_path, nrows=20000, usecols=["title", "ingredients", "NER", "directions"])
-print(df["NER"].iloc[0])
-print(type(df["NER"].iloc[0])) #check NER datatype. 
 
-#Convert stringtype lists to python lists
+# Convert stringtype lists to python lists
 def parse_list(item):
     try:
         return json.loads(item)
     except:
         return []
+
 df["NER"] = df["NER"].apply(parse_list)
-print(type(df["NER"].iloc[0]))
-print(df["NER"].iloc[0])
 
 
 def is_match(user_item: str, recipe_item: str) -> bool:
@@ -73,7 +64,9 @@ def find_recipes(available_ingredients, df_recipes):
             "title" : title,
             "matched": matched,
             "missing": missing,
-            "coverage": len(matched) / len(recipe_ingredients)
+            "coverage": len(matched) / len(recipe_ingredients),
+            "ingredients": row["ingredients"],
+            "directions": row["directions"]
         }
 
         if len(missing) == 0:
@@ -86,14 +79,16 @@ def find_recipes(available_ingredients, df_recipes):
 
 
 
-#Test it with a sample list# Test it with a sample list!
-sample_ingredients = ["eggs", "cheese", "butter", "milk", "salt", "bread"]
-make_Now, missing = find_recipes(sample_ingredients, df)
+if __name__ == "__main__":
+    # Test it with a sample list!
+    sample_ingredients = ["eggs", "cheese", "butter", "milk", "salt", "bread"]
+    make_Now, missing = find_recipes(sample_ingredients, df)
 
-print(f"\n--- Found {len(make_Now)} recipes you can MAKE NOW! ---")
-for r in make_Now[:3]:  # print first 3
-    print(f"{r['title']} -> Matched: {r['matched']}")
+    print(f"\n--- Found {len(make_Now)} recipes you can MAKE NOW! ---")
+    for r in make_Now[:3]:  # print first 3
+        print(f"{r['title']} -> Matched: {r['matched']}")
 
-print(f"\n--- Found {len(missing)} recipes MISSING 1-2 ITEMS ---")
-for r in missing[:3]:  # print first 3
+    print(f"\n--- Found {len(missing)} recipes MISSING 1-2 ITEMS ---")
+    for r in missing[:3]:  # print first 3
+        print(f"{r['title']} -> Missing: {r['missing']}")
     print(f"{r['title']} -> Missing: {r['missing']}")
