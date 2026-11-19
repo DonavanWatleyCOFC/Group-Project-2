@@ -5,6 +5,8 @@ import json
 import platform
 import subprocess
 import sys
+import sysconfig
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -23,6 +25,12 @@ def environment(torch):
             'gpu': torch.cuda.get_device_name(0) if torch.cuda.is_available() else None}
 
 
+def open_recording(recording):
+    executable = Path(sysconfig.get_path('scripts')) / ('rerun.exe' if os.name == 'nt' else 'rerun')
+    subprocess.Popen([str(executable), str(Path(recording).resolve())],
+                     creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
@@ -37,17 +45,40 @@ def main():
         command.add_argument('--output', required=True, help='New run directory; never overwrites.')
     train.add_argument('--epochs', type=int, default=50)
     train.add_argument('--batch', type=int, default=-1)
+    train.add_argument('--hsv-h', type=float, default=0.015,
+                       help='Maximum hue shift; preserves food color while varying fridge lighting.')
+    train.add_argument('--hsv-s', type=float, default=0.35,
+                       help='Maximum saturation variation for color robustness.')
+    train.add_argument('--hsv-v', type=float, default=0.25,
+                       help='Maximum brightness/value variation for refrigerator lighting.')
     for command in (evaluate, predict):
         command.add_argument('--weights', required=True, type=Path)
         command.add_argument('--device', default='cpu')
     predict.add_argument('--source', required=True, type=Path)
     predict.add_argument('--confidence', type=float, default=0.25)
     predict.add_argument('--rerun', action='store_true', help='Open interactive prediction boxes in Rerun.')
+    predict.add_argument('--ocr', action='store_true', help='Add local PaddleOCR label evidence; retain YOLO-only predictions.')
+    predict.add_argument('--ocr-python', type=Path,
+                         help='Python with requirements-ocr.txt installed; defaults to .ocr-venv or current Python.')
     args = parser.parse_args()
     if args.command == 'train' and (args.epochs < 1 or args.batch == 0 or args.batch < -1):
         parser.error('Use positive epochs and batch=-1 or a positive batch size.')
+    if args.command == 'train' and not all(0 <= value <= 1 for value in (args.hsv_h, args.hsv_s, args.hsv_v)):
+        parser.error('HSV augmentation values must be in [0, 1].')
     if args.command == 'predict' and not 0 < args.confidence <= 1:
         parser.error('Confidence must be in (0, 1].')
+    if args.command == 'predict' and args.ocr_python and not args.ocr:
+        parser.error('--ocr-python requires --ocr.')
+    if args.command == 'predict' and args.ocr:
+        local_ocr = Path(__file__).resolve().parents[1] / '.ocr-venv' / ('Scripts/python.exe' if os.name == 'nt' else 'bin/python')
+        args.ocr_python = (args.ocr_python or (local_ocr if local_ocr.exists() else Path(sys.executable))).resolve()
+        if not args.ocr_python.is_file():
+            parser.error(f'OCR Python does not exist: {args.ocr_python}')
+        check = subprocess.run([str(args.ocr_python), '-c',
+            'import importlib.util,sys; sys.exit(0 if importlib.util.find_spec("paddleocr") and importlib.util.find_spec("paddle") else 1)'],
+            capture_output=True, text=True)
+        if check.returncode:
+            parser.error('OCR dependencies unavailable. Install requirements-ocr.txt in the interpreter selected with --ocr-python.')
     if args.command == 'predict' and args.rerun:
         try:
             import rerun
@@ -82,7 +113,8 @@ def main():
     if args.command == 'train':
         model = YOLO('yolo11n.pt')  # May download pretrained weights when explicitly run later.
         model.train(data=dataset['data'], epochs=args.epochs, imgsz=640, batch=args.batch,
-                    patience=10, seed=42, device=0, workers=0, save=True, plots=True, **common)
+                    patience=10, seed=42, device=0, workers=0, save=True, plots=True,
+                    hsv_h=args.hsv_h, hsv_s=args.hsv_s, hsv_v=args.hsv_v, **common)
         print(f'Run saved under {model.trainer.save_dir}. Back it up to shared Drive.')
     elif args.command == 'evaluate':
         model = YOLO(str(args.weights.resolve()))
@@ -113,9 +145,21 @@ def main():
                                        'xyxy': box.xyxy[0].cpu().tolist()})
             records.append({'image': str(result.path), 'detections': detections})
         write_json(output / 'predictions.json', records)
+        if args.ocr:
+            write_json(output / 'class-names.json', list(model.names.values()))
+            subprocess.run([str(args.ocr_python), '-B', str(Path(__file__).with_name('ocr_pipeline.py')),
+                '--baseline', str(output / 'predictions.json'), '--names', str(output / 'class-names.json'),
+                '--output', str(output / 'ocr')], check=True)
+            print(f'YOLO-only: {output / "predictions.json"}; YOLO + OCR: {output / "ocr/predictions.json"}')
         if args.rerun:
-            from rerun_viewer import show_predictions
-            show_predictions(output / 'predictions.json', recording=output / 'review.rrd')
+            if args.ocr:
+                subprocess.run([sys.executable, '-B', str(Path(__file__).with_name('ocr_compare_viewer.py')),
+                    '--baseline', str(output / 'predictions.json'), '--plus', str(output / 'ocr/predictions.json'),
+                    '--save', str(output / 'review.rrd'), '--class-count', str(len(model.names))], check=True)
+            else:
+                from rerun_viewer import show_predictions
+                show_predictions(output / 'predictions.json', spawn=False, recording=output / 'review.rrd')
+            open_recording(output / 'review.rrd')
 
 
 if __name__ == '__main__':

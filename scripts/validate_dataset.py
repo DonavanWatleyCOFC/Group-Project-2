@@ -24,8 +24,30 @@ def validate(data_file, manifest=None, verify_images=True):
             raise ValueError('Class IDs must be contiguous integers starting at zero.')
         names = [names[i] for i in range(len(names))]
     policy = json.loads((ROOT / 'config/classes.json').read_text())
-    if not isinstance(names, list) or len(names) != policy['required_class_count']:
-        raise ValueError('Expected exactly 30 exported project classes; do not subset or invent names.')
+    baseline_names = policy['baseline_class_names']
+    allowed_appended = policy['allowed_appended_class_names']
+    schema = config.get('class_schema', 'legacy')
+    reduced_schemas = {
+        'food61-no-spices-sugar-flour-v1': {'spices', 'sugar', 'flour'},
+        'food60-no-spices-sugar-flour-water-v1': {'spices', 'sugar', 'flour', 'water'},
+    }
+    if schema in reduced_schemas:
+        expected = [name for name in baseline_names + allowed_appended
+                    if name not in reduced_schemas[schema]]
+        if names != expected:
+            raise ValueError(f'{schema} requires its exact {len(expected)}-class order.')
+    elif not isinstance(names, list) or names[:len(baseline_names)] != baseline_names:
+        raise ValueError('The original 30 class IDs and names must remain unchanged.')
+    if schema in reduced_schemas:
+        pass  # Explicit schemas intentionally remove classes and remap the remaining IDs.
+    elif schema == 'food63-no-spices-v1':
+        expected = baseline_names + [name for name in allowed_appended if name != 'spices']
+        if names != expected:
+            raise ValueError('food63-no-spices-v1 requires its exact approved 63-class order.')
+    elif schema != 'legacy':
+        raise ValueError(f'Unknown class schema: {schema}')
+    elif names[len(baseline_names):] != allowed_appended[:len(names) - len(baseline_names)]:
+        raise ValueError('Supplemental classes must be an ordered prefix of the approved appended classes.')
     if any(not isinstance(name, str) for name in names):
         raise ValueError('Class names must be strings.')
     if len(set(names)) != len(names):

@@ -232,3 +232,6 @@ __marimo__/
 .rerun-venv/
 
 .rerun-venv-backup*/
+
+# Optional PaddleOCR runtime
+.ocr-venv/
