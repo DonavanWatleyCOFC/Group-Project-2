@@ -1,3 +1,5 @@
+// xcode: set sdk=iOS
+
 //
 //  VisualBoxing.swift
 //  app_dev_xcode_proj_2_c270
