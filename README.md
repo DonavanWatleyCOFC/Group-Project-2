@@ -1,4 +1,34 @@
 
+# Local recipe API
+
+The recipe API loads `recipe_subset.csv` from the project folder. Use a separate
+virtual environment so its dependencies do not conflict with the YOLO training
+environment.
+
+macOS/Linux:
+
+```bash
+python3 -m venv .venv-api
+source .venv-api/bin/activate
+python -m pip install -r requirements-api.txt
+python -m uvicorn server:app --reload
+```
+
+Windows PowerShell:
+
+```powershell
+py -m venv .venv-api
+.venv-api\Scripts\Activate.ps1
+python -m pip install -r requirements-api.txt
+python -m uvicorn server:app --reload
+```
+
+Open <http://127.0.0.1:8000/docs> to try the endpoints. Keep the server running
+while using the API. The iOS client currently points to `127.0.0.1`, which is
+intended for local simulator development; a physical iPhone needs the developer
+computer's LAN address and the server started with `--host 0.0.0.0`. Do not
+commit a personal LAN address.
+
 ## YOLO with optional OCR
 
 The main prediction command supports `--ocr` for local PaddleOCR package-label

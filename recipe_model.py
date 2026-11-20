@@ -1,7 +1,8 @@
 import pandas as pd
 import json
+from pathlib import Path
 
-file_path = "/Users/adwoaaddai/Desktop/CSCI 270/Python/Group-Project-2/recipe_subset.csv"
+file_path = Path(__file__).with_name("recipe_subset.csv")
 
 df = pd.read_csv(file_path, nrows=20000, usecols=["title", "ingredients", "NER", "directions"])
 
@@ -9,7 +10,7 @@ df = pd.read_csv(file_path, nrows=20000, usecols=["title", "ingredients", "NER",
 def parse_list(item):
     try:
         return json.loads(item)
-    except:
+    except (json.JSONDecodeError, TypeError):
         return []
 
 df["NER"] = df["NER"].apply(parse_list)
@@ -19,7 +20,7 @@ def is_match(user_item: str, recipe_item: str) -> bool:
     user_item = user_item.lower().strip()
     recipe_item = recipe_item.lower().strip()
     
-    #1. Exact match]
+    #1. Exact match
     if user_item == recipe_item:
         return True
 
@@ -91,4 +92,3 @@ if __name__ == "__main__":
     print(f"\n--- Found {len(missing)} recipes MISSING 1-2 ITEMS ---")
     for r in missing[:3]:  # print first 3
         print(f"{r['title']} -> Missing: {r['missing']}")
-    print(f"{r['title']} -> Missing: {r['missing']}")
