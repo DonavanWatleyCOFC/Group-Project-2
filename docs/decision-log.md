@@ -367,3 +367,13 @@ installation is not claimed. No push.
 ## 2026-10-26 — Training versus household photo comparison
 
 AI inspected five training samples and six new photos; read paired labels/checkpoint metadata and counted filename roots. Similar interiors/corruption in samples contrast with cluttered varied new scenes. Proposed domain-matched data and grouped splits before handcrafted features. See image-comparison-2026-10-26.md for evidence, alternatives, verification and limitations. No training/inference or dataset edits ran; sample prevalence and causal gains remain unmeasured.
+
+## 2026-11-20 — Compare the two 30-class detectors on a common split
+
+**Decision.** Use the original 51-image Fridge Detection v1 test split to compare the two saved 30-class YOLO11n checkpoints in the README. Their class order and evaluation inputs match. Comparing their stored validation scores would confound the result with different validation images, and the 60-class Food60 checkpoint uses a different class schema.
+
+**Method and verification.** Validated the original export and confirmed 51 test images and 610 annotated objects. Ran both checkpoints on CPU with 640-pixel inputs, Ultralytics 8.4.184, and PyTorch 2.14.1. The original baseline recorded precision 0.92794, recall 0.91931, mAP50 0.94346, and mAP50–95 0.66212. The AICook checkpoint recorded 0.90206, 0.92391, 0.94893, and 0.64990. Generated aggregate curves, confusion matrices, and comparison plots from these runs. Training-history plots use histories stored in the checkpoints. [Technical report](../README.md#detector-training-and-comparison)
+
+**Limitations and next step.** This comparison reuses a previously inspected public test split. Capture-session independence and visual near duplicates remain unresolved. The AICook experiment changed both its training data and HSV augmentation, so the scores cannot isolate either effect. Evaluate the 60-class release checkpoint on independently labeled household photos before drawing conclusions about its performance in use.
+
+**AI contribution.** Codex ran the comparison, checked the checkpoint metadata and figure links, and drafted the report. Household annotations and iOS simulator behavior were outside this verification.
